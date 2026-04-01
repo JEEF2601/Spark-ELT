@@ -12,7 +12,7 @@ RUN apt-get update \
 RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel
 
 # Instalar dependencias Python primero (mejor cache de capas)
-COPY Spark-ELT/requirements.txt .
+COPY requirements.txt .
 RUN python3 -m pip install --no-cache-dir -r requirements.txt
 
 # Instalar paquete etl-jobs desde repositorio GitHub
