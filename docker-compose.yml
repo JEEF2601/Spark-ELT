@@ -2,7 +2,12 @@
 # Los workers usan la imagen custom para tener disponibles las dependencias Python
 # cuando PySpark ejecuta transformaciones en los nodos.
 x-spark-jobs-service: &spark-jobs-service
-  build: .
+  build:
+    context: ..
+    dockerfile: Spark-ELT/Dockerfile
+    args:
+      ETL_JOBS_GIT_URL: ${ETL_JOBS_GIT_URL:-https://github.com/JEEF2601/etl-jobs.git}
+      ETL_JOBS_VERSION: ${ETL_JOBS_VERSION:-v0.1.0}
   image: spark-jobs:latest
 
 services:
@@ -10,12 +15,12 @@ services:
     image: 'apache/spark:4.0.1-python3'
     container_name: spark-master
     environment:
-      - SPARK_MASTER_HOST=192.168.100.100
+      - SPARK_MASTER_HOST=spark-master
     command:
       - /opt/spark/bin/spark-class
       - org.apache.spark.deploy.master.Master
       - '--host'
-      - 0.0.0.0
+      - spark-master
       - '--port'
       - '7077'
       - '--webui-port'
@@ -26,6 +31,8 @@ services:
       - '4040:4040'
     volumes:
       - './work:/opt/work'
+    networks:
+      - etl_shared
 
   spark-worker-1:
     <<: *spark-jobs-service
@@ -38,6 +45,8 @@ services:
       - 'spark://spark-master:7077'
       - '--webui-port'
       - '8181'
+    networks:
+      - etl_shared
 
   spark-worker-2:
     <<: *spark-jobs-service
@@ -50,6 +59,8 @@ services:
       - 'spark://spark-master:7077'
       - '--webui-port'
       - '8182'
+    networks:
+      - etl_shared
 
   # Servicio de submision de jobs. Ejecutar un job puntual:
   #   docker compose run --rm spark-jobs python jobs/influx_to_r2.py
@@ -81,3 +92,9 @@ services:
       # Spark
       - SPARK_PACKAGES=${SPARK_PACKAGES:-}
     command: ["tail", "-f", "/dev/null"]
+    networks:
+      - etl_shared
+
+networks:
+  etl_shared:
+    name: etl_shared
