@@ -3,8 +3,8 @@
 # cuando PySpark ejecuta transformaciones en los nodos.
 x-spark-jobs-service: &spark-jobs-service
   build:
-    context: ..
-    dockerfile: Spark-ELT/Dockerfile
+    context: .
+    dockerfile: Dockerfile
     args:
       ETL_JOBS_GIT_URL: ${ETL_JOBS_GIT_URL:-https://github.com/JEEF2601/etl-jobs.git}
       ETL_JOBS_VERSION: ${ETL_JOBS_VERSION:-v0.1.0}
