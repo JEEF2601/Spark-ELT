@@ -1,0 +1,5 @@
+source:
+  type: r2
+
+target:
+  type: r2

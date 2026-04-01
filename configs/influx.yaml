@@ -1,0 +1,5 @@
+source:
+  type: influxdb
+
+target:
+  type: r2

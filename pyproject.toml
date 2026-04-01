@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spark-jobs"
+version = "0.1.0"
+description = "Spark jobs desacoplados para pipelines de datos"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "pyspark",
+  "influxdb",
+  "requests",
+  "PyYAML",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
