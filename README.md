@@ -34,6 +34,4 @@ Las variables de conexion de datos y runtime Spark viven en este repositorio.
 El archivo `job_registry.yaml` define `entrypoint`, `params` y configuracion Spark por job.
 Dagster consume este registro para ejecutar cada job por nombre.
 
-## Siguiente paso
 
-Revisa `NEXT_STEPS.md` para el plan de migracion recomendado.
