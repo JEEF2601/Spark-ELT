@@ -25,6 +25,12 @@ services:
       - '7077'
       - '--webui-port'
       - '8180'
+      - '--conf'
+      - 'spark.worker.cleanup.enabled=true'
+      - '--conf'
+      - 'spark.worker.cleanup.interval=600'
+      - '--conf'
+      - 'spark.worker.cleanup.appDataTtl=3600'
     ports:
       - '8180:8180'
       - '7077:7077'
@@ -45,6 +51,12 @@ services:
       - 'spark://spark-master:7077'
       - '--webui-port'
       - '8181'
+      - '--conf'
+      - 'spark.worker.cleanup.enabled=true'
+      - '--conf'
+      - 'spark.worker.cleanup.interval=600'
+      - '--conf'
+      - 'spark.worker.cleanup.appDataTtl=3600'
     networks:
       - etl_shared
 
@@ -59,6 +71,12 @@ services:
       - 'spark://spark-master:7077'
       - '--webui-port'
       - '8182'
+      - '--conf'
+      - 'spark.worker.cleanup.enabled=true'
+      - '--conf'
+      - 'spark.worker.cleanup.interval=600'
+      - '--conf'
+      - 'spark.worker.cleanup.appDataTtl=3600'
     networks:
       - etl_shared
 
