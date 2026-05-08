@@ -27,4 +27,21 @@ ARG ETL_JOBS_GIT_URL=https://github.com/JEEF2601/etl-jobs.git
 ARG ETL_JOBS_VERSION=v0.1.4
 RUN python3 -m pip install --no-cache-dir git+${ETL_JOBS_GIT_URL}@${ETL_JOBS_VERSION}
 
+# Exponer los archivos del paquete etl_jobs en WORKDIR (/opt/spark-jobs/) para que
+# spark-submit invocado via `docker exec` pueda resolverlos por ruta absoluta sin
+# depender del classpath Python. Esto es necesario cuando Dagster (en VPS remota) usa
+# SPARK_RUNNER_MODE=docker_ssh y pasa rutas como /opt/spark-jobs/jobs/influx_to_r2.py.
+RUN python3 - <<'EOF'
+import etl_jobs, shutil, os
+src = os.path.dirname(os.path.abspath(etl_jobs.__file__))
+dst = "/opt/spark-jobs"
+for root, _dirs, files in os.walk(src):
+    for fname in files:
+        if fname.endswith(".py"):
+            rel = os.path.relpath(os.path.join(root, fname), src)
+            dest_path = os.path.join(dst, rel)
+            os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+            shutil.copy2(os.path.join(root, fname), dest_path)
+EOF
+
 USER spark
