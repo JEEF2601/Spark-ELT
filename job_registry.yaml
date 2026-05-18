@@ -1,10 +1,7 @@
 jobs:
-
-  # --- Bronze: ingesta raw desde fuentes externas ---
-
-  influx_cobre:
-    entrypoint: bronze/influx_cobre.py
-    description: Ingesta raw de datos de cobre desde InfluxDB hacia R2 (capa Bronze)
+  influx_to_r2:
+    entrypoint: jobs/influx_to_r2.py
+    description: Carga datos de InfluxDB hacia R2
     spark:
       executor_instances: 2
       executor_memory: 2g
@@ -14,19 +11,17 @@ jobs:
       - bucket
 
   cryptocompare_to_r2:
-    entrypoint: bronze/cryptocompare_to_r2.py
-    description: Ingesta raw de precios BTC desde CryptoCompare hacia R2 (capa Bronze)
+    entrypoint: jobs/cryptocompare_to_r2.py
+    description: Carga datos de CryptoCompare hacia R2
     spark:
       executor_instances: 2
       executor_memory: 2g
       driver_memory: 1g
     params: []
 
-  # --- Gold: agregaciones y modelos analíticos ---
-
   daily_aggregation:
-    entrypoint: gold/daily_aggregation.py
-    description: Agregaciones diarias sobre datasets en R2 (capa Gold)
+    entrypoint: jobs/daily_aggregation.py
+    description: Agregaciones diarias sobre datasets en R2
     spark:
       executor_instances: 2
       executor_memory: 2g
