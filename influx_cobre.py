@@ -4,4 +4,4 @@ import runpy
 
 
 if __name__ == "__main__":
-    runpy.run_module("jobs.influx_to_r2", run_name="__main__")
+    runpy.run_module("bronze.influx_cobre", run_name="__main__")
