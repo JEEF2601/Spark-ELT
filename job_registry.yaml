@@ -22,6 +22,21 @@ jobs:
       driver_memory: 1g
     params: []
 
+  # --- Silver: transformaciones y limpieza de datos ---
+
+  silver_influx_electricity:
+    entrypoint: silver/influx_electricity.py
+    description: >-
+      Transforma datos Bronze de InfluxDB (voltage, power, energy, current)
+      hacia la capa Silver para análisis de uso de energía eléctrica.
+    spark:
+      executor_instances: 2
+      executor_memory: 2g
+      driver_memory: 1g
+    params:
+      - start_date
+      - end_date
+
   # --- Gold: agregaciones y modelos analíticos ---
 
   daily_aggregation:
