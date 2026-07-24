@@ -37,6 +37,15 @@ jobs:
       - start_date
       - end_date
 
+  silver_electricity_to_postgres:
+    entrypoint: silver/silver_electricity_to_postgres.py
+    description: Carga completa de silver_electricity hacia PostgreSQL
+    spark:
+      executor_instances: 2
+      executor_memory: 2g
+      driver_memory: 1g
+    params: []
+
   # --- Gold: agregaciones y modelos analíticos ---
 
   daily_aggregation:
