@@ -25,7 +25,7 @@ RUN python3 -m pip install --no-cache-dir -r requirements.txt
 
 # Instalar paquete etl-jobs desde repositorio GitHub
 ARG ETL_JOBS_GIT_URL=https://github.com/JEEF2601/etl-jobs.git
-ARG ETL_JOBS_VERSION=v0.1.4
+ARG ETL_JOBS_VERSION=v0.2.10
 RUN python3 -m pip install --no-cache-dir git+${ETL_JOBS_GIT_URL}@${ETL_JOBS_VERSION}
 
 USER spark
