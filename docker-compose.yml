@@ -16,6 +16,7 @@ services:
     container_name: spark-master
     environment:
       - SPARK_MASTER_HOST=spark-master
+      - SPARK_CONF_spark_connect_service_enabled=true
     command:
       - /opt/spark/bin/spark-class
       - org.apache.spark.deploy.master.Master
@@ -29,6 +30,7 @@ services:
       - '8180:8180'
       - '7077:7077'
       - '4040:4040'
+      - '15002:15002'
     volumes:
       - './work:/opt/work'
     networks:
