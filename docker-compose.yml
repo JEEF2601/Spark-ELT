@@ -17,15 +17,7 @@ services:
     environment:
       - SPARK_MASTER_HOST=spark-master
       - SPARK_CONF_spark_connect_service_enabled=true
-    command:
-      - /opt/spark/bin/spark-class
-      - org.apache.spark.deploy.master.Master
-      - '--host'
-      - spark-master
-      - '--port'
-      - '7077'
-      - '--webui-port'
-      - '8180'
+    entrypoint: ["/opt/spark/entrypoint-master.sh"]
     ports:
       - '8180:8180'
       - '7077:7077'
@@ -33,6 +25,7 @@ services:
       - '15002:15002'
     volumes:
       - './work:/opt/work'
+      - './entrypoint-master.sh:/opt/spark/entrypoint-master.sh'
     networks:
       - etl_shared
 

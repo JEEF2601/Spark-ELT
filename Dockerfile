@@ -28,4 +28,9 @@ ARG ETL_JOBS_GIT_URL=https://github.com/JEEF2601/etl-jobs.git
 ARG ETL_JOBS_VERSION=v0.2.10
 RUN python3 -m pip install --no-cache-dir git+${ETL_JOBS_GIT_URL}@${ETL_JOBS_VERSION}
 
+USER root
+
+COPY entrypoint-master.sh /opt/spark/entrypoint-master.sh
+RUN chmod +x /opt/spark/entrypoint-master.sh
+
 USER spark
