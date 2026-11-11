@@ -1,48 +1,79 @@
-#!/bin/bash
 
-# Cargar variables de entorno para Spark si existen
-# SPARK_MASTER_PORT=${SPARK_MASTER_PORT:-7077}
-# SPARK_MASTER_WEBUI_PORT=${SPARK_MASTER_WEBUI_PORT:-8180}
-# SPARK_CONNECT_PORT=${SPARK_CONNECT_PORT:-15002}
+#!/usr/bin/env bash
+set -Eeuo pipefail
 
-echo "Iniciando Spark Master..."
-/opt/spark/bin/spark-class org.apache.spark.deploy.master.Master \
-    --host $(hostname) \
-    --port 7077 \
-    --webui-port 8180 &
+SPARK_HOME="${SPARK_HOME:-/opt/spark}"
+MASTER_HOST="${SPARK_MASTER_HOST:-spark-master}"
+MASTER_PORT="${SPARK_MASTER_PORT:-7077}"
+MASTER_WEBUI_PORT="${SPARK_MASTER_WEBUI_PORT:-8180}"
+CONNECT_PORT="${SPARK_CONNECT_PORT:-15002}"
 
-# Esperar a que el Master esté listo
-sleep 5
+MASTER_PID=""
+CONNECT_PID=""
 
-echo "Iniciando Spark Connect Server..."
-# Usamos el script oficial de Spark para iniciar el servidor de Connect
-/opt/spark/sbin/start-connect-server.sh \
-    --master spark://$(hostname):7077 \
-    --conf spark.connect.grpc.binding.port=15002 \
-    --conf spark.connect.grpc.binding.address=0.0.0.0
+cleanup() {
+    echo "Deteniendo servicios Spark..."
 
-# Mantener el script vivo y monitorear procesos
-# start-connect-server.sh corre en background por defecto, 
-# pero podemos monitorear el log o simplemente esperar.
-# Para que Docker no se detenga, esperamos al proceso del Master o el de Connect.
+    if [[ -n "$CONNECT_PID" ]] && kill -0 "$CONNECT_PID" 2>/dev/null; then
+        kill "$CONNECT_PID" 2>/dev/null || true
+    fi
 
-echo "Servidores iniciados. Monitoreando..."
+    if [[ -n "$MASTER_PID" ]] && kill -0 "$MASTER_PID" 2>/dev/null; then
+        kill "$MASTER_PID" 2>/dev/null || true
+    fi
 
-# Función para limpieza al recibir señales de stop
-_term() { 
-  echo "Deteniendo servicios Spark..."
-  /opt/spark/sbin/stop-connect-server.sh
-  # El Master se detendrá al caer el contenedor o podemos matarlo explícitamente
-  pkill -f org.apache.spark.deploy.master.Master
-  exit 0
+    [[ -z "$CONNECT_PID" ]] || wait "$CONNECT_PID" 2>/dev/null || true
+    [[ -z "$MASTER_PID" ]] || wait "$MASTER_PID" 2>/dev/null || true
 }
 
-trap _term SIGTERM SIGINT
+trap cleanup EXIT
+trap 'exit 0' SIGTERM SIGINT
 
-# Spark Connect genera un archivo pid en /opt/spark/pids/ si está configurado, 
-# o podemos simplemente esperar.
-while true; do
-  ps aux | grep -q "org.apache.spark.deploy.master.Master" || exit 1
-  ps aux | grep -q "org.apache.spark.sql.connect.service.SparkConnectServer" || exit 1
-  sleep 10
+echo "Iniciando Spark Master..."
+
+"$SPARK_HOME/bin/spark-class" \
+    org.apache.spark.deploy.master.Master \
+    --host "$MASTER_HOST" \
+    --port "$MASTER_PORT" \
+    --webui-port "$MASTER_WEBUI_PORT" &
+
+MASTER_PID=$!
+
+echo "Esperando disponibilidad del Master..."
+
+for i in $(seq 1 30); do
+    if ! kill -0 "$MASTER_PID" 2>/dev/null; then
+        echo "ERROR: Spark Master terminó inesperadamente."
+        exit 1
+    fi
+
+    if (echo > "/dev/tcp/127.0.0.1/$MASTER_PORT") 2>/dev/null; then
+        break
+    fi
+
+    if [[ "$i" -eq 30 ]]; then
+        echo "ERROR: Timeout esperando Spark Master."
+        exit 1
+    fi
+
+    sleep 1
 done
+
+echo "Spark Master disponible en spark://$MASTER_HOST:$MASTER_PORT"
+
+echo "Iniciando Spark Connect..."
+
+"$SPARK_HOME/sbin/start-connect-server.sh" --wait \
+    --master "spark://$MASTER_HOST:$MASTER_PORT" \
+    --conf "spark.connect.grpc.binding.port=$CONNECT_PORT" \
+    --conf "spark.connect.grpc.binding.address=0.0.0.0" &
+
+CONNECT_PID=$!
+
+echo "Spark Connect iniciado. Monitoreando servicios..."
+
+# El contenedor debe terminar si cualquiera de los dos servicios falla.
+wait -n "$MASTER_PID" "$CONNECT_PID"
+
+echo "ERROR: Uno de los servicios Spark terminó inesperadamente."
+exit 1

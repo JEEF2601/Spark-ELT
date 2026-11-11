@@ -30,7 +30,7 @@ RUN python3 -m pip install --no-cache-dir git+${ETL_JOBS_GIT_URL}@${ETL_JOBS_VER
 
 USER root
 
-COPY entrypoint-master.sh /opt/spark/entrypoint-master.sh
+COPY --chmod=755 entrypoint-master.sh /opt/spark/entrypoint-master.sh
 RUN chmod +x /opt/spark/entrypoint-master.sh
 
 USER spark

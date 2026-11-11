@@ -16,7 +16,6 @@ services:
     container_name: spark-master
     environment:
       - SPARK_MASTER_HOST=spark-master
-      - SPARK_CONF_spark_connect_service_enabled=true
     entrypoint: ["/opt/spark/entrypoint-master.sh"]
     ports:
       - '8180:8180'
@@ -25,7 +24,6 @@ services:
       - '15002:15002'
     volumes:
       - './work:/opt/work'
-      - './entrypoint-master.sh:/opt/spark/entrypoint-master.sh'
     networks:
       - etl_shared
 
