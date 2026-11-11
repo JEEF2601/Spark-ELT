@@ -12,7 +12,8 @@ x-spark-jobs-service: &spark-jobs-service
 
 services:
   spark-master:
-    image: 'apache/spark:4.0.1-python3'
+    #image: 'apache/spark:4.0.1-python3'
+    <<: *spark-jobs-service
     container_name: spark-master
     environment:
       - SPARK_MASTER_HOST=spark-master
