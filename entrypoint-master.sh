@@ -46,7 +46,7 @@ for i in $(seq 1 30); do
         exit 1
     fi
 
-    if (echo > "/dev/tcp/127.0.0.1/$MASTER_PORT") 2>/dev/null; then
+    if (echo > "/dev/tcp/$MASTER_HOST/$MASTER_PORT") 2>/dev/null; then
         break
     fi
 
