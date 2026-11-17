@@ -64,8 +64,8 @@ echo "Iniciando Spark Connect..."
 
 "$SPARK_HOME/sbin/start-connect-server.sh" --wait \
     --master "spark://$MASTER_HOST:$MASTER_PORT" \
-    --conf "spark.connect.grpc.binding.port=$CONNECT_PORT" \
-    --conf "spark.connect.grpc.binding.address=0.0.0.0" &
+    --conf "spark.cores.max=$SPARK_CONNECT_MAX_CORES" \
+    --conf "spark.executor.cores=$SPARK_CONNECT_EXECUTOR_CORES" \\
 
 CONNECT_PID=$!
 
