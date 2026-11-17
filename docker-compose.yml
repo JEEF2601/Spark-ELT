@@ -1,14 +1,18 @@
+# Imagen base de workers y submitter construida desde este repositorio.
+# Los workers usan la imagen custom para tener disponibles las dependencias Python
+# cuando PySpark ejecuta transformaciones en los nodos.
 x-spark-jobs-service: &spark-jobs-service
   build:
     context: .
     dockerfile: Dockerfile
     args:
       ETL_JOBS_GIT_URL: ${ETL_JOBS_GIT_URL:-https://github.com/JEEF2601/etl-jobs.git}
-      ETL_JOBS_VERSION: ${ETL_JOBS_VERSION:-v0.3.0}
+      ETL_JOBS_VERSION: v0.3.0
   image: spark-jobs:latest
 
 services:
   spark-master:
+    #image: 'apache/spark:4.0.1-python3'
     <<: *spark-jobs-service
     container_name: spark-master
     environment:
@@ -18,9 +22,9 @@ services:
       - '8180:8180'
       - '7077:7077'
       - '4040:4040'
+      - '15002:15002'
     volumes:
       - './work:/opt/work'
-      - './entrypoint-master.sh:/opt/spark/entrypoint-master.sh'
     networks:
       - etl_shared
 
@@ -32,6 +36,12 @@ services:
     environment:
       - SPARK_LOCAL_HOSTNAME=spark-worker-1
       - SPARK_WORKER_OPTS=-Dspark.worker.cleanup.enabled=true -Dspark.worker.cleanup.interval=600 -Dspark.worker.cleanup.appDataTtl=3600
+    command:
+      - /opt/spark/bin/spark-class
+      - org.apache.spark.deploy.worker.Worker
+      - 'spark://spark-master:7077'
+      - '--webui-port'
+      - '8181'
     networks:
       - etl_shared
 
@@ -43,9 +53,19 @@ services:
     environment:
       - SPARK_LOCAL_HOSTNAME=spark-worker-2
       - SPARK_WORKER_OPTS=-Dspark.worker.cleanup.enabled=true -Dspark.worker.cleanup.interval=600 -Dspark.worker.cleanup.appDataTtl=3600
+    command:
+      - /opt/spark/bin/spark-class
+      - org.apache.spark.deploy.worker.Worker
+      - 'spark://spark-master:7077'
+      - '--webui-port'
+      - '8182'
     networks:
       - etl_shared
 
+  # Servicio de submision de jobs. Ejecutar un job puntual:
+  #   docker compose run --rm spark-jobs python jobs/influx_to_r2.py
+  # O conectarse de forma interactiva:
+  #   docker compose exec spark-jobs bash
   spark-jobs:
     <<: *spark-jobs-service
     container_name: spark-jobs
@@ -54,10 +74,6 @@ services:
       - spark-worker-1
       - spark-worker-2
     working_dir: /opt/spark-jobs
-    ports:
-      - "2222:2222"
-    volumes:
-      - /opt/spark/ssh/authorized_keys:/etc/ssh/authorized_keys/spark:ro
     environment:
       - SPARK_MASTER_URL=spark://spark-master:7077
       # R2 / Cloudflare
@@ -76,13 +92,7 @@ services:
       # Spark
       - SPARK_JARS=${SPARK_JARS:-}
       - SPARK_PACKAGES=${SPARK_PACKAGES:-}
-    command:
-      - bash
-      - -lc
-      - |
-        mkdir -p /run/sshd
-        /usr/sbin/sshd
-        exec tail -f /dev/null
+    command: ["tail", "-f", "/dev/null"]
     networks:
       - etl_shared
 
