@@ -7,7 +7,7 @@ RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel
 COPY requirements.txt .
 RUN python3 -m pip install --no-cache-dir -r requirements.txt
 ARG ETL_JOBS_GIT_URL=https://github.com/JEEF2601/etl-jobs.git
-ARG ETL_JOBS_VERSION=v0.3.0
+ARG ETL_JOBS_VERSION=v0.3.1
 RUN python3 -m pip install --no-cache-dir git+${ETL_JOBS_GIT_URL}@${ETL_JOBS_VERSION}
 # SSH server configuration
 RUN mkdir -p /run/sshd /etc/ssh/authorized_keys     && touch /etc/ssh/authorized_keys/spark     && chown root:root /etc/ssh/authorized_keys     && chmod 755 /etc/ssh/authorized_keys     && chown root:root /etc/ssh/authorized_keys/spark     && chmod 644 /etc/ssh/authorized_keys/spark     && sed -i 's/#Port 22/Port 2222/' /etc/ssh/sshd_config     && printf '\nPubkeyAuthentication yes\nPasswordAuthentication no\nPermitRootLogin no\nAllowUsers spark\nAuthorizedKeysFile /etc/ssh/authorized_keys/%u\n' >> /etc/ssh/sshd_config     && ssh-keygen -A
