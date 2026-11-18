@@ -6,11 +6,14 @@ MASTER_HOST="${SPARK_MASTER_HOST:-spark-master}"
 MASTER_PORT="${SPARK_MASTER_PORT:-7077}"
 MASTER_WEBUI_PORT="${SPARK_MASTER_WEBUI_PORT:-8180}"
 CONNECT_PORT="${SPARK_CONNECT_PORT:-15002}"
+CONNECT_MAX_CORES="${SPARK_CONNECT_MAX_CORES:-2}"
+CONNECT_EXECUTOR_CORES="${SPARK_CONNECT_EXECUTOR_CORES:-1}"
 
 MASTER_PID=""
 CONNECT_PID=""
 
 cleanup() {
+    trap - EXIT
     echo "Deteniendo servicios Spark..."
 
     if [[ -n "$CONNECT_PID" ]] && kill -0 "$CONNECT_PID" 2>/dev/null; then
@@ -64,15 +67,17 @@ echo "Iniciando Spark Connect..."
 
 "$SPARK_HOME/sbin/start-connect-server.sh" --wait \
     --master "spark://$MASTER_HOST:$MASTER_PORT" \
-    --conf "spark.cores.max=$SPARK_CONNECT_MAX_CORES" \
-    --conf "spark.executor.cores=$SPARK_CONNECT_EXECUTOR_CORES" \\
+    --conf "spark.connect.grpc.binding.port=$CONNECT_PORT" \
+    --conf "spark.cores.max=$CONNECT_MAX_CORES" \
+    --conf "spark.executor.cores=$CONNECT_EXECUTOR_CORES" &
 
 CONNECT_PID=$!
 
 echo "Spark Connect iniciado. Monitoreando servicios..."
 
 # El contenedor debe terminar si cualquiera de los dos servicios falla.
-wait -n "$MASTER_PID" "$CONNECT_PID"
+# "|| true" evita que set -e aborte antes de mostrar el mensaje de error.
+wait -n "$MASTER_PID" "$CONNECT_PID" || true
 
 echo "ERROR: Uno de los servicios Spark terminó inesperadamente."
 exit 1

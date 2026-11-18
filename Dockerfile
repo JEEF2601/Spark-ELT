@@ -12,6 +12,7 @@ RUN python3 -m pip install --no-cache-dir git+${ETL_JOBS_GIT_URL}@${ETL_JOBS_VER
 # SSH server configuration
 RUN mkdir -p /run/sshd /etc/ssh/authorized_keys     && touch /etc/ssh/authorized_keys/spark     && chown root:root /etc/ssh/authorized_keys     && chmod 755 /etc/ssh/authorized_keys     && chown root:root /etc/ssh/authorized_keys/spark     && chmod 644 /etc/ssh/authorized_keys/spark     && sed -i 's/#Port 22/Port 2222/' /etc/ssh/sshd_config     && printf '\nPubkeyAuthentication yes\nPasswordAuthentication no\nPermitRootLogin no\nAllowUsers spark\nAuthorizedKeysFile /etc/ssh/authorized_keys/%u\n' >> /etc/ssh/sshd_config     && ssh-keygen -A
 USER root
-COPY --chmod=755 entrypoint-master.sh /opt/spark/entrypoint-master.sh
+COPY entrypoint-master.sh /opt/spark/entrypoint-master.sh
+RUN ls -la /opt/spark/entrypoint-master.sh
 RUN chmod +x /opt/spark/entrypoint-master.sh
 USER spark
